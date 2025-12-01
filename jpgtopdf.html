@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JPG to PDF Converter - कार्यशील</title>
+    <style>
+        /* आपके द्वारा प्रदान किया गया CSS */
+        :root {
+            --primary-color: #007bff;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+        }
+
+        body {
+            background-color: rgb(250, 249, 255);
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .logo{
+            width: 80px;
+            height: 50px;
+            background-color: tomato;
+            background-image: url(logo.jpg); 
+            background-size: cover;
+            cursor: pointer;
+        }
+        nav{
+            display: flex;
+            height: 50px;
+            background-color: rgb(255, 255, 255);
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            width: 100%;
+        }
+        .link{
+            display: flex;
+            align-items: center;
+            margin-left: 20px;
+            flex-grow: 1;
+        }
+        a{
+            text-decoration: none;
+            color: black;
+            font-size: 18px;
+            padding: 0 20px;
+            font-family:Verdana, Geneva, Tahoma, sans-serif;
+        }
+        a:hover{
+            color: rgb(244, 50, 50);
+        }
+
+        /* --- Main Converter Container Styles --- */
+        .container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            margin-top: 50px; /* ऊपर से मार्जिन जोड़ा गया */
+            margin-bottom: auto; /* फुटर को नीचे धकेलने के लिए */
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Drag and Drop Area */
+        #dropArea {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s, background-color 0.3s;
+            margin-bottom: 20px;
+        }
+        #dropArea.highlight {
+            border-color: var(--primary-color);
+            background-color: #e6f7ff;
+        }
+        #dropArea p {
+            margin: 5px 0;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .upload-label {
+            display: block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 18px;
+            margin-top: 15px;
+        }
+
+        .upload-label:hover {
+            background-color: #0056b3;
+        }
+
+        #convertBtn {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+
+        #convertBtn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        #convertBtn:hover:enabled {
+            background-color: #1e7e34;
+        }
+
+        #statusMessage {
+            margin-top: 20px;
+            font-size: 16px;
+            color: var(--danger-color);
+        }
+        .success {
+            color: var(--success-color) !important;
+        }
+        .error {
+            color: var(--danger-color) !important;
+        }
+        
+        footer {
+            margin-top: auto;
+            width: 100%;
+            background-color:#292931;
+            color: white;
+            text-align: center;
+            padding:0;
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <nav>
+        <div class="logo" onclick="window.location.href='index.html'">
+        </div>
+        <div class="link">
+            <a href="index.html">Home</a>
+            <a href="#page-bottom">About</a>
+            <a href="#">Services</a>
+            <a href="#">Contact</a>
+        </div>
+        <div class="icon">
+        </div>
+    </nav>
+
+    <div id="mainContent" class="container">
+        <h1>📸 JPG to PDF Converter</h1>
+
+        <input type="file" id="jpgFile" accept="image/jpeg, image/jpg">
+
+        <div id="dropArea">
+            <p>Drag & Drop your JPG file here</p>
+            <p>— OR —</p>
+            <label for="jpgFile" class="upload-label">
+                👆 Select JPG File
+            </label>
+        </div>
+
+        <button id="convertBtn" disabled>
+            Convert to PDF and Download
+        </button>
+
+        <div id="statusMessage">Please select a JPG file.</div>
+    </div>
+    
+    <footer>
+        <p id="page-bottom" style="text-align: center; padding: 20px; background-color: #222; color: white;">&copy; 2025 Design Tools. All rights reserved. | Design By Vivek Azad</p>
+    </footer>
+
+    <script>
+        // DOM तत्वों का चयन करना
+        const jpgFileInput = document.getElementById('jpgFile');
+        const dropArea = document.getElementById('dropArea');
+        const convertBtn = document.getElementById('convertBtn');
+        const statusMessage = document.getElementById('statusMessage');
+
+        let selectedFile = null;
+
+        // --- फाइल चयन (File Selection) फंक्शन ---
+        function handleFileSelect(file) {
+            if (file && file.type.match('image/jpeg')) {
+                selectedFile = file;
+                convertBtn.disabled = false;
+                statusMessage.textContent = `File selected: ${file.name}`;
+                statusMessage.classList.add('success');
+                statusMessage.classList.remove('error');
+            } else {
+                selectedFile = null;
+                convertBtn.disabled = true;
+                statusMessage.textContent = 'Invalid file. Please select a JPG file.';
+                statusMessage.classList.add('error');
+                statusMessage.classList.remove('success');
+            }
+        }
+
+        // --- इवेंट लिसनर्स (Event Listeners) ---
+
+        // 1. इनपुट के माध्यम से फ़ाइल चयन
+        jpgFileInput.addEventListener('change', (e) => {
+            handleFileSelect(e.target.files[0]);
+        });
+
+        // 2. ड्रैग-एंड-ड्रॉप इवेंट्स
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
+        });
+
+        dropArea.addEventListener('drop', (e) => {
+            let dt = e.dataTransfer;
+            let files = dt.files;
+            handleFileSelect(files[0]);
+        }, false);
+
+
+        // 3. कनवर्ट बटन क्लिक
+        convertBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                statusMessage.textContent = 'Please select a JPG file first.';
+                statusMessage.classList.add('error');
+                return;
+            }
+
+            statusMessage.textContent = 'Converting... Please wait.';
+            statusMessage.classList.remove('success', 'error');
+            convertBtn.disabled = true;
+
+            try {
+                // फ़ाइल को डेटा यूआरएल (Data URL) में पढ़ें
+                const fileReader = new FileReader();
+                fileReader.onload = async (e) => {
+                    const imgData = e.target.result;
+                    
+                    // jsPDF का उपयोग करके PDF बनाएं
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+
+                    // एक अस्थायी छवि तत्व बनाएं
+                    const img = new Image();
+                    img.onload = function() {
+                        // छवि के मूल आयाम (original dimensions) प्राप्त करें
+                        const imgWidth = img.width;
+                        const imgHeight = img.height;
+
+                        // A4 पेज के आयाम (8.27 x 11.69 इंच या 210 x 297 mm, jsPDF डिफ़ॉल्ट रूप से mm का उपयोग करता है)
+                        const pdfWidth = doc.internal.pageSize.getWidth();
+                        const pdfHeight = doc.internal.pageSize.getHeight();
+
+                        // छवि को फिट करने के लिए गणना करें
+                        let ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+                        let finalWidth = imgWidth * ratio;
+                        let finalHeight = imgHeight * ratio;
+
+                        // पृष्ठ पर छवि को केंद्रित करें
+                        let x = (pdfWidth - finalWidth) / 2;
+                        let y = (pdfHeight - finalHeight) / 2;
+
+                        // PDF में छवि जोड़ें
+                        doc.addImage(imgData, 'JPEG', x, y, finalWidth, finalHeight);
+
+                        // PDF फ़ाइल डाउनलोड करें
+                        const filename = selectedFile.name.replace(/\.(jpe?g)$/i, '') + '.pdf';
+                        doc.save(filename);
+
+                        statusMessage.textContent = `Conversion successful! ${filename} downloaded.`;
+                        statusMessage.classList.add('success');
+                        convertBtn.disabled = false;
+                    };
+                    img.src = imgData;
+                };
+                fileReader.readAsDataURL(selectedFile);
+
+            } catch (error) {
+                statusMessage.textContent = 'An error occurred during conversion.';
+                statusMessage.classList.add('error');
+                console.error('Conversion Error:', error);
+                convertBtn.disabled = false;
+            }
+        });
+
+    </script>
+</body>
+</html>
