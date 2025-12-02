@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Editable PAN Card Generator (Front & Back)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        /* --- DISPLAY CONTAINER (Front and Back को एक साथ रखता है) --- */
+        #display-wrapper {
+            display: flex; /* दोनों PAN कार्ड को अगल-बगल रखता है */
+            gap: 20px; /* दोनों के बीच की दूरी */
+            margin-bottom: 20px;
+            /* अधिकतम चौड़ाई 1100px (520+20+520) सेट करें ताकि स्क्रीन पर फिट हो जाए */
+            max-width: 1100px; 
+            width: 100%;
+        }
+
+        /* --- सामान्य कार्ड स्टाइलिंग (800px की जगह 520px चौड़ाई) --- */
+        .pan-card-side {
+            width: 520px; 
+            height: 325px; /* 520x325px, अनुपात (8:5) बनाए रखा गया */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            overflow: hidden;
+            position: relative; /* pan-text के लिए आवश्यक */
+        }
+
+        /* --- PAN CARD FRONT DISPLAY AREA --- */
+        #pan-card-front {
+            background-image: url('panblank.jpg');
+            background-size: 100% 100%;
+        }
+
+        /* --- PAN CARD BACK DISPLAY AREA --- */
+        #pan-card-back {
+            background-image: url('back.jpg'); /* PAN कार्ड के पीछे का हिस्सा */
+            background-size: 100% 100%;
+        }
+        
+        
+        /* सभी टेक्स्ट एलिमेंट्स के लिए सामान्य स्टाइलिंग */
+        .pan-text {
+            position: absolute;
+            font-family: Arial, sans-serif;
+            color: black;
+            padding: 2px 5px;
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        /* --- फ्रंट टेक्स्ट पोजीशन (800px से 520px के अनुपात में एडजस्ट किया गया) --- */
+        /* Scale factor ≈ 0.65 */
+        #pan-number-display { top: 126px; left: 175px; font-size: 20px; font-weight: 540; letter-spacing: 1px; }
+        #name-display { top: 195px; left: 25px; font-size: 18px; font-weight: 510; }
+        #father-name-display  { top: 237px; left: 25px; font-size: 18px; font-weight: 510; }
+        #dob-display  { top: 295px; left: 25px; font-size: 18px; font-weight: 510; }
+        /* #signature-display { top: 293px; left: 358px; font-family: 'Times New Roman', serif; font-size: 20px; font-style: italic; font-weight: 500; } */
+
+        /* --- फोटो एरिया (UPDATED POSITION) --- */
+        #photo-container {
+            position: absolute;
+            top: 86px; /* 169px से 150px किया गया (ऊपर) */
+            left: 15px; /* 33px से 15px किया गया (बाईं ओर) */
+            width: 88px;
+            height: 93px;
+            background-color: #e0f7fa;
+            border: 1px solid #ccc;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .sign {
+            position: absolute;
+            top: 250px; /* 169px से 150px किया गया (ऊपर) */
+            left: 170px; /* 33px से 15px किया गया (बाईं ओर) */
+            width: 150px;
+            height: 47px;
+            background-color: white;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #user-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            
+        }
+
+        /* --- QR कोड एरिया --- */
+        #qr-code-area {
+            position: absolute;
+            top: 93px;
+            right: 25px;
+            width: 138px;
+            height: 138px;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+        }
+        
+        #qr-code-area img {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- CONTROL FORM & BUTTONS --- */
+        #controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 1060px; /* दोनों कार्ड की चौड़ाई + गैप के अनुसार 1060px सेट किया गया */
+            max-width: 100%; /* सुनिश्चित करता है कि फॉर्म ओवरफ़्लो न हो */
+        }
+        
+        .control-group { display: flex; gap: 15px; align-items: center; }
+        .control-group label { width: 150px; font-weight: bold; }
+        .control-group input[type="text"], .control-group input[type="date"] { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.3s; }
+        #download-buttons button { background-color: #007bff; color: white; }
+        #download-buttons button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <div id="display-wrapper">
+        <div id="pan-card-front" class="pan-card-side">
+            <div class="sign">
+
+            </div>
+            <div id="photo-container">
+                <img id="user-photo" src="" alt="User Photo" style="display:none;">
+                <span id="photo-placeholder">PHOTO</span>
+            </div>
+            
+            <div id="qr-code-area">
+                <img id="qr-front" src="https://api.qrserver.com/v1/create-qr-code/?size=98x98&data=EICPA6679B" alt="QR Code">
+            </div>
+
+            <span class="pan-text" id="pan-number-display" contenteditable="true">EICPA6679B</span>
+            <span class="pan-text" id="name-display" contenteditable="true">VIVEK AZAD</span>
+            <span class="pan-text" id="father-name-display" contenteditable="true">RANJEET RAY</span>
+            <span class="pan-text" id="dob-display" contenteditable="true">22/10/2003</span>
+        </div>
+        
+        <div id="pan-card-back" class="pan-card-side">
+             </div>
+    </div>
+
+    <div id="controls">
+        <h3>PAN Card Data Input</h3>
+        
+        <div class="control-group">
+            <label for="pan-number-input">PAN Number:</label>
+            <input type="text" id="pan-number-input" value="EICPA6679B" maxlength="10">
+        </div>
+        <div class="control-group">
+            <label for="name-input">Name (Capital):</label>
+            <input type="text" id="name-input" value="VIVEK AZAD">
+        </div>
+        <div class="control-group">
+            <label for="father-name-input">Father's Name:</label>
+            <input type="text" id="father-name-input" value="RANJEET RAY">
+        </div>
+        <div class="control-group">
+            <label for="dob-input">Date of Birth (DD/MM/YYYY):</label>
+            <input type="text" id="dob-input" value="22/10/2003" placeholder="DD/MM/YYYY">
+        </div>
+        
+        <div class="control-group">
+            <label for="photo-upload">Upload Photo:</label>
+            <input type="file" id="photo-upload" accept="image/*">
+        </div>
+
+        <div id="download-buttons" class="control-group" style="justify-content: space-around;">
+            <button onclick="downloadAsJPG()">Download as JPG (Both Sides)</button>
+            <button onclick="downloadAsPDF()">Download as PDF (Both Sides)</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA UPDATE LOGIC ---
+        const inputs = [
+            { id: 'pan-number-input', target: 'pan-number-display', updateQR: true },
+            { id: 'name-input', target: 'name-display' },
+            { id: 'father-name-input', target: 'father-name-display' },
+            { id: 'dob-input', target: 'dob-display' },
+            { id: 'signature-input', target: 'signature-display' }
+        ];
+
+        function updatePanCard() {
+            inputs.forEach(item => {
+                const inputElement = document.getElementById(item.id);
+                const displayElement = document.getElementById(item.target);
+                
+                if (inputElement && displayElement) {
+                    let value = inputElement.value;
+                    
+                    if (item.id === 'name-input') {
+                        value = value.toUpperCase();
+                    }
+                    
+                    displayElement.textContent = value;
+
+                    if (item.updateQR) {
+                        const qrCodeImg = document.getElementById('qr-front');
+                        // QR कोड साइज़ को भी 98x98px पर एडजस्ट किया गया
+                        if (qrCodeImg) {
+                            qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=98x98&data=${value}`;
+                        }
+                    }
+                }
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', updatePanCard);
+        inputs.forEach(item => {
+            const inputElement = document.getElementById(item.id);
+            if (inputElement) {
+                inputElement.addEventListener('input', updatePanCard);
+            }
+        });
+
+        // --- PHOTO UPLOAD LOGIC ---
+        document.getElementById('photo-upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const userPhoto = document.getElementById('user-photo');
+                    const photoPlaceholder = document.getElementById('photo-placeholder');
+                    userPhoto.src = e.target.result;
+                    userPhoto.style.display = 'block';
+                    photoPlaceholder.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // --- DOWNLOAD LOGIC (UPDATED for both sides) ---
+        
+        // JPG डाउनलोड फ़ंक्शन
+        function downloadAsJPG() {
+            const wrapperElement = document.getElementById('display-wrapper');
+            
+            html2canvas(wrapperElement, {
+                scale: 2, 
+                allowTaint: true,
+                useCORS: true
+            }).then(function(canvas) {
+                const link = document.createElement('a');
+                link.download = 'pan_card_front_back.jpg';
+                link.href = canvas.toDataURL('image/jpeg', 0.95);
+                link.click();
+            });
+        }
+
+        // PDF डाउनलोड फ़ंक्शन
+        function downloadAsPDF() {
+            const wrapperElement = document.getElementById('display-wrapper');
+            
+            html2canvas(wrapperElement, {
+                scale: 2, 
+                allowTaint: true,
+                useCORS: true
+            }).then(function(canvas) {
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                const { jsPDF } = window.jspdf;
+                
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+
+                // A4 Landscape dimensions in mm
+                const pdfWidth = 297; 
+                const pdfHeight = 210; 
+                
+                const ratio = Math.min(pdfWidth / canvasWidth, pdfHeight / canvasHeight);
+                const imgWidth = canvasWidth * ratio;
+                const imgHeight = canvasHeight * ratio;
+
+                const pdf = new jsPDF('l', 'mm', 'a4'); 
+                
+                const x = (pdfWidth - imgWidth) / 2;
+                const y = (pdfHeight - imgHeight) / 2;
+                
+                pdf.addImage(imgData, 'JPEG', x, y, imgWidth, imgHeight);
+                pdf.save("pan_card_front_back.pdf");
+            });
+        }
+        
+        document.querySelectorAll('.pan-text').forEach(element => {
+            element.addEventListener('input', function() {
+                // ...
+            });
+        });
+
+    </script>
+</body>
+</html>
