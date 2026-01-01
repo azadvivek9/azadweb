@@ -3,380 +3,346 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF to JPG Converter</title>
+    <title>PDF to JPG Converter | Web_Sai</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
-        // PDF.js worker path को सेट करें ताकि यह सही फ़ाइलों को लोड कर सके
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
     
     <style>
-        /* आपकी नेविगेशन और सामान्य शैलियाँ (Your Navigation and General Styles) */
         :root {
-            --primary-color: #007bff;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
+            --bg-deep: #050505;
+            --neon-purple: #bc13fe;
+            --text-main: #f8f9fa;
+            --text-dim: #a0a0a0;
+            --container-bg: rgba(20, 20, 20, 0.6);
+            --card-bg: rgba(255, 255, 255, 0.03);
         }
 
         body {
-            background-color: rgb(250, 249, 255);
+            background: radial-gradient(circle at top right, #1a0229 0%, transparent 70%);
+            background-color: var(--bg-deep);
             padding: 0;
             margin: 0;
-            overflow-x: hidden; 
-            font-family: 'Arial', sans-serif;
+            overflow-x: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            color: var(--text-main);
         }
 
-        /* --- Navigation Styles --- */
+        /* --- Navigation --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 8%;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            width: 100%;
+            box-sizing: border-box;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
         .logo {
-            width: 80px;
-            height: 50px;
-            background-color: tomato;
-            background-image: url(logo.jpg); 
-            background-size: cover;
+            font-size: 24px;
+            font-weight: 800;
+            text-decoration: none;
+            color: #fff;
+            letter-spacing: 1px;
             cursor: pointer;
         }
 
-        nav {
-            display: flex;
-            height: 50px;
-            background-color: rgb(255, 255, 255);
-            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-            padding: 10px;
-            width: 100%;
+        .logo span {
+            color: var(--neon-purple);
+            text-shadow: 0 0 15px rgba(188, 19, 254, 0.5);
         }
 
-        .link {
-            display: flex;
-            align-items: center;
-            margin-left: 20px;
-            flex-grow: 1;
-        }
-
-        a {
+        .link a {
             text-decoration: none;
-            color: black;
-            font-size: 18px;
-            padding: 0 20px;
-            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            color: var(--text-dim);
+            font-weight: 500;
+            font-size: 15px;
+            padding: 0 15px;
+            transition: 0.3s;
         }
 
-        a:hover {
-            color: rgb(244, 50, 50);
-        }
+        .link a:hover { color: var(--neon-purple); }
 
-        /* --- Main Converter Container Styles --- */
+        /* --- Main Container --- */
         .container {
-            background: #fff;
+            background: var(--container-bg);
+            backdrop-filter: blur(10px);
             padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 600px; /* चौड़ा कर दिया गया है */
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            width: 90%;
+            max-width: 650px;
             text-align: center;
-            margin-top: 50px;
-            margin-bottom: 50px;
+            margin-top: 60px;
+            margin-bottom: 60px;
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 25px;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #fff, var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        input[type="file"] {
-            display: none;
-        }
+        .subtitle { color: var(--text-dim); font-size: 14px; margin-bottom: 30px; }
+
+        input[type="file"] { display: none; }
 
         /* Drag and Drop Area */
         #dropArea {
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            padding: 30px;
-            text-align: center;
+            border: 2px dashed rgba(188, 19, 254, 0.3);
+            border-radius: 15px;
+            padding: 40px 20px;
             cursor: pointer;
-            transition: border-color 0.3s, background-color 0.3s;
-            margin-bottom: 20px;
+            transition: 0.3s;
+            background: rgba(188, 19, 254, 0.02);
+            margin-bottom: 25px;
         }
+
         #dropArea.highlight {
-            border-color: var(--primary-color);
-            background-color: #e6f7ff;
-        }
-        #dropArea p {
-            margin: 5px 0;
-            font-size: 16px;
-            color: #666;
+            border-color: var(--neon-purple);
+            background: rgba(188, 19, 254, 0.1);
         }
 
         .upload-label {
-            display: block;
-            background-color: var(--primary-color);
+            display: inline-block;
+            background: var(--neon-purple);
             color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s;
-            font-size: 18px;
             margin-top: 15px;
+            transition: 0.3s;
         }
 
-        .upload-label:hover {
-            background-color: #0056b3;
-        }
+        .upload-label:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(188, 19, 254, 0.4); }
 
         #convertBtn {
-            background-color: var(--success-color);
+            background: transparent;
             color: white;
-            border: none;
+            border: 2px solid var(--neon-purple);
             padding: 15px 30px;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 18px;
-            transition: background-color 0.3s;
-            margin-top: 20px;
-        }
-
-        #convertBtn:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-        }
-
-        #convertBtn:hover:enabled {
-            background-color: #1e7e34;
-        }
-
-        #statusMessage {
-            margin-top: 20px;
             font-size: 16px;
-            color: var(--danger-color);
+            font-weight: 700;
+            width: 100%;
+            transition: 0.3s;
+            margin-top: 10px;
         }
-        
-        /* --- Results Area Styles --- */
+
+        #convertBtn:disabled { border-color: #333; color: #555; cursor: not-allowed; }
+        #convertBtn:hover:enabled { background: var(--neon-purple); box-shadow: 0 0 25px rgba(188, 19, 254, 0.4); }
+
+        #statusMessage { margin-top: 20px; font-size: 14px; padding: 10px; border-radius: 8px; }
+
+        /* --- Results Area --- */
         #results {
-            margin-top: 30px;
+            margin-top: 35px;
             text-align: left;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 25px;
         }
+
         .page-preview {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
             margin-bottom: 15px;
             padding: 15px;
-        }
-        .page-preview canvas {
-            max-width: 100px;
-            max-height: 100px;
-            border: 1px solid #ccc;
-            margin-right: 15px;
-        }
-        .download-btn {
-            background-color: var(--success-color);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-        .download-btn:hover {
-            background-color: #1e7e34;
+            transition: 0.3s;
         }
 
-        /* --- Footer Styles --- */
+        .page-preview:hover { background: rgba(255, 255, 255, 0.06); }
+
+        .page-preview canvas {
+            max-width: 80px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .page-info { flex-grow: 1; margin-left: 20px; font-weight: 600; font-size: 14px; }
+
+        .download-btn {
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            transition: 0.3s;
+        }
+
+        .download-btn:hover { background: #00ff88; color: #000; }
+
+        /* --- Footer --- */
         footer {
             margin-top: auto;
             width: 100%;
-            background-color: #292931;
-            color: white;
+            background: #0a0a0a;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 25px 0;
             text-align: center;
-            padding: 0;
         }
-        
+        footer b { color: var(--neon-purple); }
     </style>
 </head>
 <body>
     <nav>
         <div class="logo" onclick="window.location.href='index.html'">
+            WEB_<span>SAI</span>
         </div>
         <div class="link">
             <a href="index.html">Home</a>
-            <a href="#page-bottom">About</a>
-            <a href="#">Services</a>
-            <a href="#">Contact</a>
-        </div>
-        <div class="icon">
+            <a href="#about">About</a>
+            <a href="#services">Services</a>
+            <a href="#contact">Contact</a>
         </div>
     </nav>
 
-    <div id="mainContent" class="container">
-        <h1>📑 PDF to JPG Converter</h1>
+    <div class="container">
+        <i class="fas fa-file-pdf" style="font-size: 40px; color: var(--neon-purple); margin-bottom: 15px;"></i>
+        <h1>PDF to JPG</h1>
+        <p class="subtitle">Extract high-quality images from your PDF pages instantly.</p>
         
         <input type="file" id="pdfFile" accept="application/pdf">
         
         <div id="dropArea">
-            <p>Drag & Drop your **PDF** file here</p>
-            <p>— OR —</p>
-            <label for="pdfFile" class="upload-label">
-                👆 Select PDF File
-            </label>
+            <i class="fas fa-cloud-upload-alt" style="font-size: 30px; margin-bottom: 10px; display: block; color: var(--neon-purple);"></i>
+            <p style="margin: 0; font-weight: 600;">Drag & Drop PDF here</p>
+            <p style="font-size: 12px; color: var(--text-dim); margin: 10px 0;">— OR —</p>
+            <label for="pdfFile" class="upload-label">Browse Files</label>
         </div>
         
         <button id="convertBtn" disabled>
-            Convert PDF to JPGs
+            <i class="fas fa-sync-alt"></i> Convert PDF to JPGs
         </button>
         
-        <div id="statusMessage">Please select a PDF file.</div>
+        <div id="statusMessage">No file selected</div>
         
-        <div id="results">
-            </div>
+        <div id="results"></div>
     </div>
 
     <footer>
-        <p style="text-align: center; padding: 20px; background-color: #222; color: white;">&copy; 2025 Design Tools. All rights reserved. | Design By Vivek Azad</p>
+        <p>&copy; 2025 Design Tools. All rights reserved. | Design By <b>Vivek Azad</b></p>
     </footer>
 
     <script>
-        // --- DOM Elements ---
         const fileInput = document.getElementById('pdfFile');
         const convertBtn = document.getElementById('convertBtn');
         const statusMessage = document.getElementById('statusMessage');
         const dropArea = document.getElementById('dropArea');
         const resultsDiv = document.getElementById('results');
-        
-        // Initialize status message color
-        statusMessage.style.color = 'var(--danger-color)';
 
-        // --- 1. Drag & Drop and File Change Logic ---
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-            document.body.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
-        });
-
-        dropArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            dropArea.classList.remove('highlight');
-            const dt = e.dataTransfer;
-            fileInput.files = dt.files; 
-            handleFileChange(dt.files);
-        }
-        
-        fileInput.addEventListener('change', function() {
-            handleFileChange(this.files);
-        });
-        
         function handleFileChange(files) {
-            resultsDiv.innerHTML = ''; // Clear previous results
-            if (files.length > 0) {
-                const file = files[0];
-                // Check if file is PDF
-                if (file.type === 'application/pdf') {
-                    convertBtn.disabled = false;
-                    statusMessage.textContent = `PDF selected: ${file.name}`;
-                    statusMessage.style.color = 'var(--success-color)';
-                } else {
-                    convertBtn.disabled = true;
-                    statusMessage.textContent = 'Invalid file type. Please select a PDF file.';
-                    statusMessage.style.color = 'var(--danger-color)';
-                }
+            resultsDiv.innerHTML = '';
+            if (files.length > 0 && files[0].type === 'application/pdf') {
+                convertBtn.disabled = false;
+                statusMessage.textContent = `Ready to convert: ${files[0].name}`;
+                statusMessage.style.color = "#00ff88";
             } else {
                 convertBtn.disabled = true;
-                statusMessage.textContent = 'Please select a PDF file.';
-                statusMessage.style.color = 'var(--danger-color)';
+                statusMessage.textContent = 'Please select a valid PDF file.';
+                statusMessage.style.color = "#ff4d4d";
             }
         }
 
-        // --- 2. Conversion Logic ---
+        fileInput.addEventListener('change', (e) => handleFileChange(e.target.files));
 
-        convertBtn.addEventListener('click', async function() {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(name => {
+            dropArea.addEventListener(name, (e) => { e.preventDefault(); e.stopPropagation(); });
+        });
+
+        ['dragenter', 'dragover'].forEach(name => {
+            dropArea.addEventListener(name, () => dropArea.classList.add('highlight'));
+        });
+
+        ['dragleave', 'drop'].forEach(name => {
+            dropArea.addEventListener(name, () => dropArea.classList.remove('highlight'));
+        });
+
+        dropArea.addEventListener('drop', (e) => {
+            fileInput.files = e.dataTransfer.files;
+            handleFileChange(e.dataTransfer.files);
+        });
+
+        convertBtn.addEventListener('click', async () => {
             const file = fileInput.files[0];
-
             if (!file) return;
 
-            statusMessage.textContent = 'Reading and converting PDF... Please wait.';
-            statusMessage.style.color = '#d8a706';
+            statusMessage.textContent = 'Converting pages...';
+            statusMessage.style.color = "#bc13fe";
             convertBtn.disabled = true;
             resultsDiv.innerHTML = '';
 
             try {
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                const numPages = pdf.numPages;
                 let originalFileName = file.name.replace(/\.[^/.]+$/, ""); 
 
-                for (let i = 1; i <= numPages; i++) {
+                for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
-                    const viewport = page.getViewport({ scale: 2.0 }); // Increase scale for higher resolution
+                    const viewport = page.getViewport({ scale: 1.5 });
                     const canvas = document.createElement('canvas');
                     const context = canvas.getContext('2d');
-
                     canvas.height = viewport.height;
                     canvas.width = viewport.width;
 
-                    const renderContext = {
-                        canvasContext: context,
-                        viewport: viewport
-                    };
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
 
-                    await page.render(renderContext).promise;
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
 
-                    // Get the JPG data URL from the canvas
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.9); // 0.9 is quality
-
-                    // Create the download link element
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = dataUrl;
-                    downloadLink.download = `${originalFileName}_page_${i}.jpg`;
-                    downloadLink.textContent = `Download Page ${i} as JPG`;
-                    downloadLink.classList.add('download-btn');
-                    
-                    // Create preview container
                     const previewContainer = document.createElement('div');
-                    previewContainer.classList.add('page-preview');
+                    previewContainer.className = 'page-preview';
+                    
+                    // Thumbnail
+                    const thumb = document.createElement('canvas');
+                    thumb.width = 80;
+                    thumb.height = 80 * (viewport.height / viewport.width);
+                    thumb.getContext('2d').drawImage(canvas, 0, 0, thumb.width, thumb.height);
 
-                    // Create a thumbnail for display (optional, can be simplified)
-                    const displayCanvas = document.createElement('canvas');
-                    displayCanvas.width = 100;
-                    displayCanvas.height = 100 * (viewport.height / viewport.width);
-                    displayCanvas.getContext('2d').drawImage(canvas, 0, 0, displayCanvas.width, displayCanvas.height);
-
-                    // Add elements to results div
-                    previewContainer.appendChild(displayCanvas);
-                    const textDiv = document.createElement('div');
-                    textDiv.textContent = `Page ${i}`;
-                    previewContainer.appendChild(textDiv);
-                    previewContainer.appendChild(downloadLink);
+                    previewContainer.innerHTML = `
+                        <div style="display:flex; align-items:center;">
+                            <div class="thumb-box"></div>
+                            <div class="page-info">Page ${i}</div>
+                        </div>
+                        <a href="${dataUrl}" download="${originalFileName}_page_${i}.jpg" class="download-btn">
+                            <i class="fas fa-download"></i> JPG
+                        </a>
+                    `;
+                    previewContainer.querySelector('.thumb-box').appendChild(thumb);
                     resultsDiv.appendChild(previewContainer);
                 }
 
-                statusMessage.textContent = `✅ Success! Converted ${numPages} page(s). Download the JPGs below.`;
-                statusMessage.style.color = 'var(--success-color)';
+                statusMessage.textContent = `✅ Successfully converted ${pdf.numPages} pages!`;
+                statusMessage.style.color = "#00ff88";
             } catch (error) {
-                console.error("PDF Conversion Error:", error);
-                statusMessage.textContent = `❌ Conversion failed: ${error.message}. Try another PDF.`;
-                statusMessage.style.color = 'var(--danger-color)';
+                statusMessage.textContent = '❌ Error during conversion.';
+                statusMessage.style.color = "#ff4d4d";
             } finally {
                 convertBtn.disabled = false;
             }
