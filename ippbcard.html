@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPPB ID Card Generator - Front & Back</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            margin: 0;
+        }
+
+        .no-print {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 450px;
+            margin-bottom: 30px;
+        }
+
+        h2 { color: #8b1d1d; text-align: center; margin-top: 0; }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #8b1d1d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:hover { background-color: #5e1313; }
+
+        /* Card Container (A4 Setup) */
+        .print-container {
+            display: flex;
+            justify-content: center;
+            background: white;
+            padding: 10px;
+        }
+
+        .card {
+            width: 85.6mm;
+            height: 53.98mm;
+            position: relative;
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            border-radius: 2mm;
+            overflow: hidden;
+            border: 0.1mm solid #ccc;
+        }
+
+        #front-card { background-image: url('frontcard.jpg'); }
+        #back-card { background-image: url('backcard.jpg'); }
+
+        /* Text Overlays */
+        .overlay-text {
+            position: absolute;
+            color: #000;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        /* Adjusting positions for IPPB format */
+        #out-name {
+            top: 44%;
+            left: 25.5%;
+            font-size: 11pt;
+            letter-spacing: 0.3mm; /* Aligns with the boxes */
+
+        }
+
+        #out-acc {
+            top: 52.7%;
+            left: 24.5%;
+            letter-spacing: 2.8mm; /* Aligns with the boxes */
+            font-size: 12pt;
+        }
+
+        #out-cif {
+            top: 62.5%;
+            left: 36.5%;
+            letter-spacing: 2.8mm; /* Aligns with the boxes */
+            font-size: 12pt;
+        }
+
+        /* Print Logic */
+        @media print {
+            body { background: none; padding: 0; }
+            .no-print { display: none; }
+            .print-container {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                display: flex;
+                justify-content: flex-start;
+                padding: 0;
+                margin: 0;
+            }
+            .card {
+                box-shadow: none;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            @page {
+                size: A4;
+                margin: 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print">
+        <h2>IPPB Card Generator</h2>
+        <input type="text" id="in-name" placeholder="Pura Naam Likhein" value="VIVEK AZAD" oninput="sync()">
+        <input type="text" id="in-acc" placeholder="Account Number (12 digit)" value="007910169866" maxlength="12" oninput="sync()">
+        <input type="text" id="in-cif" placeholder="CIF Number (11 digit)" value="6107428942" maxlength="11" oninput="sync()">
+        <button onclick="window.print()">Print Card (Front + Back)</button>
+        <p style="font-size: 11px; color: #666; margin-top: 10px;">* Print settings mein 'Background Graphics' ko ON rakhein.</p>
+    </div>
+
+    <div class="print-container">
+        <div id="front-card" class="card">
+            <div id="out-name" class="overlay-text"></div>
+            <div id="out-acc" class="overlay-text"></div>
+            <div id="out-cif" class="overlay-text"></div>
+        </div>
+
+        <div id="back-card" class="card">
+            </div>
+    </div>
+
+    <script>
+        onload = sync; // Initial Sync on Page Load
+        function sync() {
+            // Name Sync
+            document.getElementById('out-name').innerText = document.getElementById('in-name').value;
+            
+            // Acc Sync (Add spaces/padding if needed to fit boxes)
+            document.getElementById('out-acc').innerText = document.getElementById('in-acc').value;
+            
+            // CIF Sync
+            document.getElementById('out-cif').innerText = document.getElementById('in-cif').value;
+        }
+    </script>
+
+</body>
+</html>
